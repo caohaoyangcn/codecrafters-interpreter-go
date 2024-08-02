@@ -19,6 +19,7 @@ func NewScanner(src io.Reader) *Scanner {
 	sc := &scanner.Scanner{}
 	sc.Init(src)
 	sc.Mode = scanner.GoTokens ^ scanner.ScanComments ^ scanner.SkipComments
+	sc.Whitespace ^= scanner.GoWhitespace
 	return &Scanner{
 		sc:     sc,
 		tokens: []*token.Token{},
@@ -97,6 +98,10 @@ func (s *Scanner) scanToken() {
 		} else {
 			s.addToken(token.SLASH)
 		}
+	case ' ':
+	case '\r':
+	case '\t':
+	case '\n':
 	default:
 		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Unexpected character: %s",
 			s.getLine(), string(next)))
