@@ -9,9 +9,9 @@ import (
 )
 
 type Scanner struct {
-	sc     *scanner.Scanner
-	tokens []*token.Token
-	error
+	sc             *scanner.Scanner
+	tokens         []*token.Token
+	errors         []error
 	start, current scanner.Position
 }
 
@@ -97,7 +97,8 @@ func (s *Scanner) scanToken() {
 			s.addToken(token.SLASH)
 		}
 	default:
-		s.error = fmt.Errorf("unexpected character at line %d", s.getLine())
+		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Unexpected character: %s",
+			s.getLine(), string(next)))
 		break
 	}
 
@@ -131,4 +132,8 @@ func (s *Scanner) match(expected rune) bool {
 		return true
 	}
 	return false
+}
+
+func (s *Scanner) Errors() []error {
+	return s.errors
 }

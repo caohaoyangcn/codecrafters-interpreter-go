@@ -35,7 +35,19 @@ func main() {
 
 	sc := loxscanner.NewScanner(bytes.NewReader(fileContents))
 	tokens := sc.Scan()
+	const (
+		exitCodeSuccess   = 0
+		exitCodeScanError = 65
+	)
+	exitCode := exitCodeSuccess
+	if sc.Errors() != nil {
+		exitCode = exitCodeScanError
+		for _, err := range sc.Errors() {
+			_, _ = fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		}
+	}
 	for _, token := range tokens {
 		fmt.Println(token.String())
 	}
+	os.Exit(exitCode)
 }
