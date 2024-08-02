@@ -27,6 +27,12 @@ func TestNewScanner(t *testing.T) {
 			want: []*token.Token{
 				{
 					Type:   token.BANG_EQUAL,
+					Lexeme: token.BANG_EQUAL.Repr(),
+					Object: nil,
+					Line:   1,
+				},
+				{
+					Type:   token.EOF,
 					Lexeme: "",
 					Object: nil,
 					Line:   1,
@@ -41,6 +47,11 @@ func TestNewScanner(t *testing.T) {
 			want: []*token.Token{
 				{
 					Type:   token.SLASH,
+					Lexeme: token.SLASH.Repr(),
+					Object: nil,
+					Line:   1,
+				}, {
+					Type:   token.EOF,
 					Lexeme: "",
 					Object: nil,
 					Line:   1,
@@ -50,30 +61,58 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "comment-slash",
 			args: args{
-				strings.NewReader("//"),
+				strings.NewReader("//Comment"),
 			},
-			want: []*token.Token{},
+			want: []*token.Token{
+				{
+					Type:   token.EOF,
+					Lexeme: "",
+					Object: nil,
+					Line:   1,
+				},
+			},
 		},
 		{
 			name: "space",
 			args: args{
 				strings.NewReader(" "),
 			},
-			want: []*token.Token{},
+			want: []*token.Token{
+				{
+					Type:   token.EOF,
+					Lexeme: "",
+					Object: nil,
+					Line:   1,
+				},
+			},
 		},
 		{
 			name: "space-2",
 			args: args{
 				strings.NewReader("\r"),
 			},
-			want: []*token.Token{},
+			want: []*token.Token{
+				{
+					Type:   token.EOF,
+					Lexeme: "",
+					Object: nil,
+					Line:   1,
+				},
+			},
 		},
 		{
 			name: "space-3",
 			args: args{
 				strings.NewReader("\n"),
 			},
-			want: []*token.Token{},
+			want: []*token.Token{
+				{
+					Type:   token.EOF,
+					Lexeme: "",
+					Object: nil,
+					Line:   2,
+				},
+			},
 		},
 	}
 	for _, tt := range tests {

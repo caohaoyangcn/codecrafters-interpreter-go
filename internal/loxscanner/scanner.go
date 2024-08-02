@@ -18,6 +18,7 @@ type Scanner struct {
 func NewScanner(src io.Reader) *Scanner {
 	sc := &scanner.Scanner{}
 	sc.Init(src)
+	sc.Mode = scanner.GoTokens ^ scanner.ScanComments ^ scanner.SkipComments
 	return &Scanner{
 		sc:     sc,
 		tokens: []*token.Token{},
