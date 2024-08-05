@@ -25,6 +25,13 @@ func NewNumberToken(numStr string, line int) Token {
 	if strings.IndexByte(numStr, '.') < 0 {
 		numStr += ".0"
 	}
+	for i := len(numStr) - 1; i >= 1; i-- {
+		if numStr[i] == '0' && numStr[i-1] != '.' {
+			numStr = numStr[:i]
+		} else {
+			break
+		}
+	}
 	return NewToken(NUMBER, origToken, numStr, line)
 
 }

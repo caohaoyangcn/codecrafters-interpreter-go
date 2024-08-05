@@ -6,11 +6,34 @@ import (
 
 type Type int
 
+func IsKeyword(identifier string) (bool, Type) {
+	switch identifier {
+	case "and",
+		"class",
+		"else",
+		"false",
+		"for",
+		"fun",
+		"if",
+		"nil",
+		"or",
+		"print",
+		"return",
+		"super",
+		"this",
+		"true",
+		"var",
+		"while":
+		return true, Keywords[identifier]
+	}
+	return false, 0
+}
+
 const (
 	// Single-character tokens.
 
 	//
-	LEFT_PAREN Type = iota
+	LEFT_PAREN Type = iota + 1
 	RIGHT_PAREN
 	LEFT_BRACE
 	RIGHT_BRACE
@@ -57,6 +80,27 @@ const (
 	WHILE
 
 	EOF
+)
+
+var (
+	Keywords = map[string]Type{
+		"and":    AND,
+		"class":  CLASS,
+		"else":   ELSE,
+		"false":  FALSE,
+		"for":    FOR,
+		"fun":    FUN,
+		"if":     IF,
+		"nil":    NIL,
+		"or":     OR,
+		"print":  PRINT,
+		"return": RETURN,
+		"super":  SUPER,
+		"this":   THIS,
+		"true":   TRUE,
+		"var":    VAR,
+		"while":  WHILE,
+	}
 )
 
 func (t Type) String() string {
@@ -183,8 +227,8 @@ func (t Type) Repr(obj any) string {
 		return "<"
 	case LESS_EQUAL:
 		return "<="
-	//case IDENTIFIER:
-	//	return "IDENTIFIER"
+	case IDENTIFIER:
+		return fmt.Sprintf("%s", obj)
 	case STRING:
 		return fmt.Sprintf("\"%s\"", obj)
 	case NUMBER:

@@ -131,6 +131,9 @@ func (s *Scanner) scanToken() {
 		if isDigit(next) {
 			s.scanNumber(next)
 			break
+		} else if isAlpha(next) {
+			s.scanIdentifier(next)
+			break
 		}
 		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Unexpected character: %s",
 			s.getLine(), string(next)))
@@ -141,6 +144,22 @@ func (s *Scanner) scanToken() {
 
 func isDigit(c rune) bool {
 	return '0' <= c && c <= '9'
+}
+func isAlpha(c rune) bool {
+	return (c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z') ||
+		c == '_'
+}
+func isAlphaNumeric(c rune) bool {
+	return isAlpha(c) || isDigit(c)
+}
+func (s *Scanner) scanIdentifier(curr rune) {
+	sb := &strings.Builder{}
+	sb.WriteRune(curr)
+	for isAlphaNumeric(s.Peek()) {
+		sb.WriteRune(s.Next())
+	}
+	s.addIdentifier(sb.String())
 }
 
 func (s *Scanner) ScanAll() []*token.Token {
@@ -176,6 +195,14 @@ func (s *Scanner) addTokenLexeme(t token.Type, obj interface{}) {
 func (s *Scanner) addNumberToken(numStr string) {
 	newToken := token.NewNumberToken(numStr, s.getLine())
 	s.tokens = append(s.tokens, &newToken)
+}
+func (s *Scanner) addIdentifier(i string) {
+	if is, type_ := token.IsKeyword(i); is {
+		s.addToken(type_)
+	} else {
+		newToken := token.NewToken(token.IDENTIFIER, token.IDENTIFIER.Repr(i), nil, s.getLine())
+		s.tokens = append(s.tokens, &newToken)
+	}
 }
 
 func (s *Scanner) getLine() int {
