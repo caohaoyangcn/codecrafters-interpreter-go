@@ -7,24 +7,8 @@ import (
 type Type int
 
 func IsKeyword(identifier string) (bool, Type) {
-	switch identifier {
-	case "and",
-		"class",
-		"else",
-		"false",
-		"for",
-		"fun",
-		"if",
-		"nil",
-		"or",
-		"print",
-		"return",
-		"super",
-		"this",
-		"true",
-		"var",
-		"while":
-		return true, Keywords[identifier]
+	if v, ok := Keywords[identifier]; ok {
+		return true, v
 	}
 	return false, 0
 }
@@ -101,7 +85,30 @@ var (
 		"var":    VAR,
 		"while":  WHILE,
 	}
+
+	Keywords2Str = map[Type]string{
+		AND:    "and",
+		CLASS:  "class",
+		ELSE:   "else",
+		FALSE:  "false",
+		FOR:    "for",
+		FUN:    "fun",
+		IF:     "if",
+		NIL:    "nil",
+		OR:     "or",
+		PRINT:  "print",
+		RETURN: "return",
+		SUPER:  "super",
+		THIS:   "this",
+		TRUE:   "true",
+		VAR:    "var",
+		WHILE:  "while",
+	}
 )
+
+func IsKeywordType(t Type) bool {
+	return t >= AND && t <= WHILE
+}
 
 func (t Type) String() string {
 	switch t {
@@ -188,6 +195,9 @@ func (t Type) String() string {
 }
 
 func (t Type) Repr(obj any) string {
+	if IsKeywordType(t) {
+		return Keywords2Str[t]
+	}
 	switch t {
 	case LEFT_PAREN:
 		return "("
@@ -233,20 +243,20 @@ func (t Type) Repr(obj any) string {
 		return fmt.Sprintf("\"%s\"", obj)
 	case NUMBER:
 		return fmt.Sprintf("%s", obj)
-	//case AND:
-	//	return "AND"
-	//case CLASS:
-	//	return "CLASS"
-	//case ELSE:
-	//	return "ELSE"
+	case AND:
+		return "AND"
+	case CLASS:
+		return "CLASS"
+	case ELSE:
+		return "ELSE"
 	case FALSE:
 		return "false"
-	//case FUN:
-	//	return "FUN"
-	//case FOR:
-	//	return "FOR"
-	//case IF:
-	//	return "IF"
+	case FUN:
+		return "FUN"
+	case FOR:
+		return "FOR"
+	case IF:
+		return "IF"
 	case NIL:
 		return "nil"
 	//case OR:
