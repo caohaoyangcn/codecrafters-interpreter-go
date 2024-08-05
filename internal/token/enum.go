@@ -1,5 +1,9 @@
 package token
 
+import (
+	"fmt"
+)
+
 type Type int
 
 const (
@@ -139,7 +143,7 @@ func (t Type) String() string {
 	panic("unknown token")
 }
 
-func (t Type) Repr() string {
+func (t Type) Repr(obj any) string {
 	switch t {
 	case LEFT_PAREN:
 		return "("
@@ -181,8 +185,8 @@ func (t Type) Repr() string {
 		return "<="
 	//case IDENTIFIER:
 	//	return "IDENTIFIER"
-	//case STRING:
-	//	return "STRING"
+	case STRING:
+		return fmt.Sprintf("\"%s\"", obj)
 	//case NUMBER:
 	//	return "NUMBER"
 	//case AND:

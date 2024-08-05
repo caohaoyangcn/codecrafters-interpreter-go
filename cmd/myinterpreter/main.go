@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 
@@ -33,8 +32,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	sc := loxscanner.NewScanner(bytes.NewReader(fileContents))
-	tokens := sc.Scan()
+	sc := loxscanner.NewScanner(string(fileContents))
+	tokens := sc.ScanAll()
 	const (
 		exitCodeSuccess   = 0
 		exitCodeScanError = 65

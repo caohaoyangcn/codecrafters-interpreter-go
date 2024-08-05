@@ -1,8 +1,8 @@
 package loxscanner
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 	"text/scanner"
@@ -11,27 +11,48 @@ import (
 )
 
 type Scanner struct {
-	sc             *scanner.Scanner
-	tokens         []*token.Token
-	errors         []error
-	start, current scanner.Position
+	line          int
+	content       []rune
+	contentOffset int
+	tokens        []*token.Token
+	errors        []error
+	startOffset   int
 }
 
-func NewScanner(src io.Reader) *Scanner {
-	sc := &scanner.Scanner{}
-	sc.Init(src)
-	sc.Mode ^= scanner.ScanComments ^ scanner.SkipComments
-	sc.Whitespace ^= scanner.GoWhitespace
+func (s *Scanner) Next() rune {
+	idx := s.contentOffset
+	if idx >= len(s.content) {
+		return scanner.EOF
+	}
+	s.contentOffset++
+	return s.content[idx]
+}
+func (s *Scanner) Peek() rune {
+	idx := s.contentOffset
+	if idx >= len(s.content) {
+		return scanner.EOF
+	}
+	return s.content[idx]
+}
+func (s *Scanner) PeekNext() rune {
+	idx := s.contentOffset
+	if idx+1 >= len(s.content) {
+		return scanner.EOF
+	}
+	return s.content[idx+1]
+}
+
+func NewScanner(src string) *Scanner {
 	return &Scanner{
-		sc:     sc,
-		tokens: []*token.Token{},
+		line:    1,
+		content: bytes.Runes([]byte(src)),
+		tokens:  []*token.Token{},
 	}
 }
 
 func (s *Scanner) scanToken() {
-	s.start = s.sc.Position
-	next := s.sc.Scan()
-	s.current = s.sc.Pos()
+	s.startOffset = s.contentOffset
+	next := s.Next()
 	switch next {
 	case '(':
 		s.addToken(token.LEFT_PAREN)
@@ -93,9 +114,9 @@ func (s *Scanner) scanToken() {
 		break
 	case '/':
 		if s.match('/') {
-			for peek := s.sc.Peek(); peek != '\n' &&
-				peek != scanner.EOF; peek = s.sc.Peek() {
-				s.sc.Next()
+			for peek := s.Peek(); peek != '\n' &&
+				peek != scanner.EOF; peek = s.Peek() {
+				s.Next()
 			}
 		} else {
 			s.addToken(token.SLASH)
@@ -104,6 +125,7 @@ func (s *Scanner) scanToken() {
 	case '\r':
 	case '\t':
 	case '\n':
+		s.line++
 	case '"':
 		s.scanString()
 	default:
@@ -121,8 +143,8 @@ func isDigit(c rune) bool {
 	return '0' <= c && c <= '9'
 }
 
-func (s *Scanner) Scan() []*token.Token {
-	for s.sc.Peek() != scanner.EOF {
+func (s *Scanner) ScanAll() []*token.Token {
+	for s.Peek() != scanner.EOF {
 		s.scanToken()
 	}
 	s.addToken(token.EOF)
@@ -130,40 +152,36 @@ func (s *Scanner) Scan() []*token.Token {
 }
 func (s *Scanner) scanString() {
 	sb := &strings.Builder{}
-	for s.sc.Peek() != '"' {
-		sb.WriteRune(s.sc.Next())
+	for s.Peek() != '"' && s.Peek() != scanner.EOF {
+		sb.WriteRune(s.Next())
 	}
-	if s.sc.Peek() == scanner.EOF {
+	if s.Peek() == scanner.EOF {
 		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Unterminated string.", s.getLine()))
 		return
 	}
-	s.sc.Next()
-	s.tokens = append(s.tokens, &token.Token{
-		Type:   token.STRING,
-		Lexeme: sb.String(),
-		Line:   s.getLine(),
-		Object: nil,
-	})
+	s.Next()
+	s2 := sb.String()
+	s.addTokenLexeme(token.STRING, s2)
 
 }
 
 func (s *Scanner) addToken(t token.Type) {
-	newToken := token.NewToken(t, t.Repr(), nil, s.getLine())
+	newToken := token.NewToken(t, t.Repr(nil), nil, s.getLine())
 	s.tokens = append(s.tokens, &newToken)
 }
 func (s *Scanner) addTokenLexeme(t token.Type, obj interface{}) {
-	newToken := token.NewToken(t, t.Repr(), obj, s.getLine())
+	newToken := token.NewToken(t, t.Repr(obj), obj, s.getLine())
 	s.tokens = append(s.tokens, &newToken)
 }
 
 func (s *Scanner) getLine() int {
-	pos := s.sc.Pos()
-	return pos.Line
+	pos := s.line
+	return pos
 }
 
 func (s *Scanner) match(expected rune) bool {
-	if s.sc.Peek() == expected {
-		s.sc.Next()
+	if s.Peek() == expected {
+		s.Next()
 		return true
 	}
 	return false
@@ -177,14 +195,14 @@ func (s *Scanner) scanNumber(firstDigit rune) {
 	sb := &strings.Builder{}
 	sb.WriteRune(firstDigit)
 	var next rune
-	for isDigit(s.sc.Peek()) {
-		sb.WriteRune(s.sc.Next())
+	for isDigit(s.Peek()) {
+		sb.WriteRune(s.Next())
 	}
-	if s.sc.Peek() == '.' && isDigit(s.sc.Peek()) {
-		next = s.sc.Next()
+	if s.Peek() == '.' && isDigit(s.Peek()) {
+		next = s.Next()
 		sb.WriteRune(next)
-		for isDigit(s.sc.Peek()) {
-			sb.WriteRune(s.sc.Next())
+		for isDigit(s.Peek()) {
+			sb.WriteRune(s.Next())
 		}
 	}
 	num, _ := strconv.ParseFloat(sb.String(), 64)

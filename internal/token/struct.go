@@ -25,5 +25,5 @@ func (t Token) String() string {
 	if object == nil {
 		object = "null"
 	}
-	return fmt.Sprintf("%s %s %v", t.Type, t.Lexeme, object)
+	return fmt.Sprintf("%s %v %v", t.Type, t.Lexeme, object)
 }

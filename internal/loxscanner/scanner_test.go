@@ -1,8 +1,6 @@
 package loxscanner
 
 import (
-	"io"
-	"strings"
 	"testing"
 
 	"github.com/codecrafters-io/interpreter-starter-go/internal/token"
@@ -12,7 +10,7 @@ import (
 
 func TestNewScanner(t *testing.T) {
 	type args struct {
-		src io.Reader
+		src string
 	}
 	tests := []struct {
 		name string
@@ -22,12 +20,12 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "two-chars-token",
 			args: args{
-				strings.NewReader("!="),
+				"!=",
 			},
 			want: []*token.Token{
 				{
 					Type:   token.BANG_EQUAL,
-					Lexeme: token.BANG_EQUAL.Repr(),
+					Lexeme: token.BANG_EQUAL.Repr(nil),
 					Object: nil,
 					Line:   1,
 				},
@@ -42,12 +40,12 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "slash",
 			args: args{
-				strings.NewReader("/"),
+				"/",
 			},
 			want: []*token.Token{
 				{
 					Type:   token.SLASH,
-					Lexeme: token.SLASH.Repr(),
+					Lexeme: token.SLASH.Repr(nil),
 					Object: nil,
 					Line:   1,
 				}, {
@@ -61,7 +59,7 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "comment-slash",
 			args: args{
-				strings.NewReader("//Comment"),
+				"//Comment",
 			},
 			want: []*token.Token{
 				{
@@ -75,7 +73,7 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "space",
 			args: args{
-				strings.NewReader(" "),
+				" ",
 			},
 			want: []*token.Token{
 				{
@@ -89,7 +87,7 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "space-2",
 			args: args{
-				strings.NewReader("\r"),
+				"\r",
 			},
 			want: []*token.Token{
 				{
@@ -103,7 +101,7 @@ func TestNewScanner(t *testing.T) {
 		{
 			name: "space-3",
 			args: args{
-				strings.NewReader("\n"),
+				"\n",
 			},
 			want: []*token.Token{
 				{
@@ -114,11 +112,31 @@ func TestNewScanner(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "string",
+			args: args{
+				"\"hello\"",
+			},
+			want: []*token.Token{
+				{
+					Type:   token.STRING,
+					Lexeme: "\"hello\"",
+					Object: "hello",
+					Line:   1,
+				},
+				{
+					Type:   token.EOF,
+					Lexeme: "",
+					Object: nil,
+					Line:   1,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewScanner(tt.args.src)
-			got.Scan()
+			got.ScanAll()
 			assert.Equal(t, tt.want, got.tokens)
 		})
 	}
