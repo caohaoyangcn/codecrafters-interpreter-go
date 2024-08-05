@@ -2,6 +2,7 @@ package token
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Token struct {
@@ -18,6 +19,14 @@ func NewToken(t Type, lexeme string, object interface{}, line int) Token {
 		Object: object,
 		Line:   line,
 	}
+}
+func NewNumberToken(numStr string, line int) Token {
+	origToken := numStr
+	if strings.IndexByte(numStr, '.') < 0 {
+		numStr += ".0"
+	}
+	return NewToken(NUMBER, origToken, numStr, line)
+
 }
 
 func (t Token) String() string {

@@ -3,7 +3,6 @@ package loxscanner
 import (
 	"bytes"
 	"fmt"
-	"strconv"
 	"strings"
 	"text/scanner"
 
@@ -131,6 +130,7 @@ func (s *Scanner) scanToken() {
 	default:
 		if isDigit(next) {
 			s.scanNumber(next)
+			break
 		}
 		s.errors = append(s.errors, fmt.Errorf("[line %d] Error: Unexpected character: %s",
 			s.getLine(), string(next)))
@@ -173,6 +173,10 @@ func (s *Scanner) addTokenLexeme(t token.Type, obj interface{}) {
 	newToken := token.NewToken(t, t.Repr(obj), obj, s.getLine())
 	s.tokens = append(s.tokens, &newToken)
 }
+func (s *Scanner) addNumberToken(numStr string) {
+	newToken := token.NewNumberToken(numStr, s.getLine())
+	s.tokens = append(s.tokens, &newToken)
+}
 
 func (s *Scanner) getLine() int {
 	pos := s.line
@@ -198,13 +202,12 @@ func (s *Scanner) scanNumber(firstDigit rune) {
 	for isDigit(s.Peek()) {
 		sb.WriteRune(s.Next())
 	}
-	if s.Peek() == '.' && isDigit(s.Peek()) {
+	if s.Peek() == '.' && isDigit(s.PeekNext()) {
 		next = s.Next()
 		sb.WriteRune(next)
 		for isDigit(s.Peek()) {
 			sb.WriteRune(s.Next())
 		}
 	}
-	num, _ := strconv.ParseFloat(sb.String(), 64)
-	s.addTokenLexeme(token.NUMBER, num)
+	s.addNumberToken(sb.String())
 }

@@ -187,8 +187,8 @@ func (t Type) Repr(obj any) string {
 	//	return "IDENTIFIER"
 	case STRING:
 		return fmt.Sprintf("\"%s\"", obj)
-	//case NUMBER:
-	//	return "NUMBER"
+	case NUMBER:
+		return fmt.Sprintf("%s", obj)
 	//case AND:
 	//	return "AND"
 	//case CLASS:
