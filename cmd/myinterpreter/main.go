@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/codecrafters-io/interpreter-starter-go/internal/loxscanner"
+	"github.com/codecrafters-io/interpreter-starter-go/internal/parser"
+	"github.com/codecrafters-io/interpreter-starter-go/internal/visitor"
 )
 
 func main() {
@@ -18,13 +20,19 @@ func main() {
 
 	command := os.Args[1]
 
-	if command != "tokenize" {
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		os.Exit(1)
+	if command == "tokenize" {
+		handleTokenize()
+	}
+	if command == "parse" {
+		handleParse()
+		os.Exit(exitCodeSuccess)
 	}
 
-	// Uncomment this block to pass the first stage
-	//
+	fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
+	os.Exit(1)
+}
+
+func handleParse() {
 	filename := os.Args[2]
 	fileContents, err := os.ReadFile(filename)
 	if err != nil {
@@ -34,10 +42,33 @@ func main() {
 
 	sc := loxscanner.NewScanner(string(fileContents))
 	tokens := sc.ScanAll()
-	const (
-		exitCodeSuccess   = 0
-		exitCodeScanError = 65
-	)
+	if sc.Errors() != nil {
+		for _, err := range sc.Errors() {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		}
+		os.Exit(exitCodeScanError)
+	}
+	p := parser.NewParser(tokens)
+	expr := p.Parse()
+	v := &visitor.AstPrinter{}
+	fmt.Println(v.Print(expr))
+}
+
+const (
+	exitCodeSuccess   = 0
+	exitCodeScanError = 65
+)
+
+func handleTokenize() {
+	filename := os.Args[2]
+	fileContents, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(1)
+	}
+
+	sc := loxscanner.NewScanner(string(fileContents))
+	tokens := sc.ScanAll()
 	exitCode := exitCodeSuccess
 	if sc.Errors() != nil {
 		exitCode = exitCodeScanError

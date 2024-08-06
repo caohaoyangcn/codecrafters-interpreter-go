@@ -43,3 +43,19 @@ func (t Token) String() string {
 	}
 	return fmt.Sprintf("%s %v %v", t.Type, t.Lexeme, object)
 }
+
+func (t Token) Literal() any {
+	switch t.Type {
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	case NIL:
+		return nil
+	case NUMBER:
+		return t.Object
+	case STRING:
+		return t.Object
+	}
+	panic("unreachable")
+}

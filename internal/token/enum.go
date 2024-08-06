@@ -194,6 +194,7 @@ func (t Type) String() string {
 	panic("unknown token")
 }
 
+// how to represent token in string
 func (t Type) Repr(obj any) string {
 	if IsKeywordType(t) {
 		return Keywords2Str[t]
