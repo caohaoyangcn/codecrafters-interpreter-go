@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	ast "github.com/codecrafters-io/interpreter-starter-go/cmd/generator/out"
+	"github.com/codecrafters-io/interpreter-starter-go/internal/ast"
 )
 
 type AstPrinter struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	ast "github.com/codecrafters-io/interpreter-starter-go/cmd/generator/out"
+	"github.com/codecrafters-io/interpreter-starter-go/internal/ast"
 	"github.com/codecrafters-io/interpreter-starter-go/internal/loxscanner"
 	"github.com/codecrafters-io/interpreter-starter-go/internal/parser"
 	"github.com/codecrafters-io/interpreter-starter-go/internal/token"

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	ast "github.com/codecrafters-io/interpreter-starter-go/cmd/generator/out"
+	"github.com/codecrafters-io/interpreter-starter-go/internal/ast"
 	"github.com/codecrafters-io/interpreter-starter-go/internal/token"
 	"github.com/codecrafters-io/interpreter-starter-go/internal/visitor"
 )

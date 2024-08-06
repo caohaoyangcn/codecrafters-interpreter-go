@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	ast "github.com/codecrafters-io/interpreter-starter-go/cmd/generator/out"
+	"github.com/codecrafters-io/interpreter-starter-go/internal/ast"
 	"github.com/codecrafters-io/interpreter-starter-go/internal/token"
 )
 

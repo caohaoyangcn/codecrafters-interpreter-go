@@ -1,4 +1,4 @@
-package generator
+package ast
 
 import (
 	"testing"
@@ -17,7 +17,7 @@ func TestDefineAst(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				outDir: "./out",
+				outDir: ".",
 				base:   "Expr",
 				types: []string{
 					"Binary   : Expr left, token.Token operator, Expr right",
