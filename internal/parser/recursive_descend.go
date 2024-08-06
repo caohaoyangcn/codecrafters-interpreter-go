@@ -107,8 +107,14 @@ func (p *Parser) Unary() (ast.Expr, error) {
 	return p.Primary()
 }
 func (p *Parser) Primary() (ast.Expr, error) {
-	if p.match(token.FALSE, token.TRUE, token.NIL, token.NUMBER, token.STRING) {
-		return ast.NewExprLiteral(p.previous().Literal()), nil
+	if p.match(token.FALSE) {
+		return ast.NewExprLiteral(false), nil
+	}
+	if p.match(token.TRUE) {
+		return ast.NewExprLiteral(true), nil
+	}
+	if p.match(token.NIL, token.NUMBER, token.STRING) {
+		return ast.NewExprLiteral(p.previous().Object), nil
 	}
 	if p.match(token.LEFT_PAREN) {
 		expr, err := p.Expression()

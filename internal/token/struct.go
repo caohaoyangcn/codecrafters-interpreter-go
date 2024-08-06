@@ -2,6 +2,7 @@ package token
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -22,40 +23,29 @@ func NewToken(t Type, lexeme string, object interface{}, line int) Token {
 }
 func NewNumberToken(numStr string, line int) Token {
 	origToken := numStr
-	if strings.IndexByte(numStr, '.') < 0 {
-		numStr += ".0"
-	}
-	for i := len(numStr) - 1; i >= 1; i-- {
-		if numStr[i] == '0' && numStr[i-1] != '.' {
-			numStr = numStr[:i]
-		} else {
-			break
-		}
-	}
-	return NewToken(NUMBER, origToken, numStr, line)
+	num, _ := strconv.ParseFloat(numStr, 64)
+
+	return NewToken(NUMBER, origToken, num, line)
 
 }
 
 func (t Token) String() string {
 	object := t.Object
+	objStr := ""
 	if object == nil {
-		object = "null"
+		objStr = "null"
+		return fmt.Sprintf("%s %v %v", t.Type, t.Lexeme, objStr)
 	}
-	return fmt.Sprintf("%s %v %v", t.Type, t.Lexeme, object)
-}
-
-func (t Token) Literal() any {
-	switch t.Type {
-	case TRUE:
-		return true
-	case FALSE:
-		return false
-	case NIL:
-		return nil
-	case NUMBER:
-		return t.Object
-	case STRING:
-		return t.Object
+	switch object.(type) {
+	case float64:
+		val := strconv.FormatFloat(object.(float64), 'f', -1, 64)
+		if strings.Contains(val, ".") {
+			objStr = val
+		} else {
+			objStr = val + ".0"
+		}
+	default:
+		objStr = fmt.Sprintf("%v", object)
 	}
-	panic("unreachable")
+	return fmt.Sprintf("%s %v %v", t.Type, t.Lexeme, objStr)
 }
