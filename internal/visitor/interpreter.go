@@ -190,7 +190,7 @@ func Stringer(obj any) string {
 	}
 	switch obj.(type) {
 	case string:
-		return fmt.Sprintf("%q", obj)
+		return fmt.Sprintf("%s", obj)
 	case float64:
 		val := strconv.FormatFloat(obj.(float64), 'f', -1, 64)
 		return val
