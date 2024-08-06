@@ -50,7 +50,7 @@ func (i *Interpreter) VisitExprBinary(expr *ast.Binary) (any, error) {
 		comparisonOp = func(a, b float64) bool { return a < b }
 	case token.LESS_EQUAL:
 		comparisonOp = func(a, b float64) bool { return a <= b }
-	case token.EQUAL:
+	case token.EQUAL_EQUAL:
 		equalityOp = i.isEqual
 	case token.BANG_EQUAL:
 		equalityOp = func(a, b any) bool {
