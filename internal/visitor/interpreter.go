@@ -36,11 +36,17 @@ func (i *Interpreter) VisitExprBinary(expr *ast.Binary) (any, error) {
 	case token.PLUS:
 		switch left.(type) {
 		case string:
+			if _, err := i.checkStringOperand(expr.Operator, right); err != nil {
+				return nil, err
+			}
 			stringConcat = func(a, b string) string { return a + b }
 		case float64:
+			if _, err := i.checkNumberOperand(expr.Operator, right); err != nil {
+				return nil, err
+			}
 			arithmeticOp = func(a, b float64) float64 { return a + b }
 		default:
-			return nil, errorFunc(left, "unsupported operand type", expr.Operator.Line)
+			return nil, errorFunc(left, "Operands must be numbers or strings", expr.Operator.Line)
 		}
 	case token.GREATER:
 		comparisonOp = func(a, b float64) bool { return a > b }
@@ -143,8 +149,7 @@ func (i *Interpreter) isEqual(a, b any) bool {
 
 func (i *Interpreter) checkNumberOperand(operator token.Token, operand any) (float64, error) {
 	if val, ok := operand.(float64); !ok {
-		return 0, errorFunc(operand, fmt.Sprintf("%s expects operand to be number",
-			operator.String()), operator.Line)
+		return 0, errorFunc(operand, "Operand must be a number.", operator.Line)
 	} else {
 		return val, nil
 	}
@@ -160,8 +165,7 @@ func (i *Interpreter) checkNumberOperands(operator token.Token, left, right any)
 }
 func (i *Interpreter) checkStringOperand(operator token.Token, operand any) (string, error) {
 	if val, ok := operand.(string); !ok {
-		return "", errorFunc(operand, fmt.Sprintf("%s expects operand to be string",
-			operator.String()), operator.Line)
+		return "", errorFunc(operand, "Operand must be a string.", operator.Line)
 	} else {
 		return val, nil
 	}
@@ -176,8 +180,14 @@ func (i *Interpreter) checkStringOperands(operator token.Token, left any, right 
 	return leftVal, rightVal, nil
 }
 func errorFunc(actual interface{}, expectation string, line int) error {
-	return fmt.Errorf("%s, but got %s",
-		expectation, actual.(fmt.Stringer).String())
+	//actualStr := ""
+	//s, ok := actual.(fmt.Stringer)
+	//if ok {
+	//	actualStr = s.String()
+	//} else {
+	//	actualStr = fmt.Sprintf("%v", actual)
+	//}
+	return fmt.Errorf("%s\n[line %d]", expectation, line)
 }
 
 func (i *Interpreter) Stringer(obj any) string {
