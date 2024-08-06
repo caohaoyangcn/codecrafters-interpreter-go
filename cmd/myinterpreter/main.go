@@ -50,13 +50,20 @@ func handleParse() {
 	}
 	p := parser.NewParser(tokens)
 	expr := p.Parse()
+	if p.Errors() != nil {
+		for _, err := range p.Errors() {
+			fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		}
+		os.Exit(exitCodeParseError)
+	}
 	v := &visitor.AstPrinter{}
 	fmt.Println(v.Print(expr))
 }
 
 const (
-	exitCodeSuccess   = 0
-	exitCodeScanError = 65
+	exitCodeSuccess    = 0
+	exitCodeScanError  = 65
+	exitCodeParseError = 65
 )
 
 func handleTokenize() {

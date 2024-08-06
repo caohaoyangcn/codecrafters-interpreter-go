@@ -10,16 +10,21 @@ import (
 type Parser struct {
 	tokens []*token.Token
 	curr   int
+	errors []error
 }
 
 func NewParser(tokens []*token.Token) *Parser {
 	return &Parser{tokens: tokens}
+}
+func (p *Parser) Errors() []error {
+	return p.errors
 }
 
 func (p *Parser) Parse() ast.Expr {
 	expr, err := p.Expression()
 	if err != nil {
 		// TODO report error
+		p.errors = append(p.errors, err)
 		return nil
 	}
 	return expr
