@@ -37,6 +37,9 @@ func (p *Parser) Expression() (ast.Expr, error) {
 // Comma implements the comma operator in C
 // ref: https://en.wikipedia.org/wiki/Comma_operator
 func (p *Parser) Comma() (ast.Expr, error) {
+	if err := p.checkBinaryOperatorHasLeftOperand(token.COMMA); err != nil {
+		return nil, err
+	}
 	expr, err := p.Ternary()
 	if err != nil {
 		return nil, fmt.Errorf("comma: %w", err)
@@ -76,6 +79,9 @@ func (p *Parser) Ternary() (ast.Expr, error) {
 	return expr, nil
 }
 func (p *Parser) Equality() (ast.Expr, error) {
+	if err := p.checkBinaryOperatorHasLeftOperand(token.EQUAL_EQUAL, token.BANG_EQUAL); err != nil {
+		return nil, err
+	}
 	expr, err := p.Comparison()
 	if err != nil {
 		return nil, fmt.Errorf("equality: %w", err)
@@ -92,6 +98,9 @@ func (p *Parser) Equality() (ast.Expr, error) {
 	return expr, nil
 }
 func (p *Parser) Comparison() (ast.Expr, error) {
+	if err := p.checkBinaryOperatorHasLeftOperand(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL); err != nil {
+		return nil, err
+	}
 	expr, err := p.Term()
 	if err != nil {
 		return nil, fmt.Errorf("comparison: %w", err)
@@ -107,6 +116,10 @@ func (p *Parser) Comparison() (ast.Expr, error) {
 	return expr, nil
 }
 func (p *Parser) Term() (ast.Expr, error) {
+	if err := p.checkBinaryOperatorHasLeftOperand(token.PLUS); err != nil {
+		tok := p.peek()
+		return nil, errorFunc(tok, fmt.Sprintf("%s: left operand required", tok.Lexeme))
+	}
 	expr, err := p.Factor()
 	if err != nil {
 		return nil, fmt.Errorf("term: %w", err)
@@ -123,6 +136,9 @@ func (p *Parser) Term() (ast.Expr, error) {
 	return expr, nil
 }
 func (p *Parser) Factor() (ast.Expr, error) {
+	if err := p.checkBinaryOperatorHasLeftOperand(token.SLASH, token.STAR); err != nil {
+		return nil, err
+	}
 	expr, err := p.Unary()
 	if err != nil {
 		return nil, fmt.Errorf("factor: %w", err)
@@ -171,6 +187,14 @@ func (p *Parser) Primary() (ast.Expr, error) {
 	return nil, errorFunc(p.peek(), "primary: expect expression")
 }
 
+func (p *Parser) peekMatch(types ...token.Type) bool {
+	for _, t := range types {
+		if p.check(t) {
+			return true
+		}
+	}
+	return false
+}
 func (p *Parser) match(types ...token.Type) bool {
 	for _, t := range types {
 		if p.check(t) {
@@ -237,4 +261,12 @@ func (p *Parser) synchronize() {
 		// discard tokens until we find a statement
 		p.advance()
 	}
+}
+
+func (p *Parser) checkBinaryOperatorHasLeftOperand(op ...token.Type) error {
+	if p.peekMatch(op...) {
+		tok := p.peek()
+		return errorFunc(tok, fmt.Sprintf("%s: left operand required", tok.Lexeme))
+	}
+	return nil
 }
