@@ -12,6 +12,20 @@ type Interpreter struct {
 	errors []error
 }
 
+func (i *Interpreter) VisitExprTernary(expr *ast.Ternary) (any, error) {
+	testResult, err := i.evaluate(expr.Test)
+	if err != nil {
+		return nil, err
+	}
+	if val, err := i.checkBooleanOperand(expr.Question, testResult); err != nil {
+		return nil, err
+	} else if val {
+		return i.evaluate(expr.Left)
+	} else {
+		return i.evaluate(expr.Right)
+	}
+}
+
 func (i *Interpreter) VisitExprBinary(expr *ast.Binary) (any, error) {
 	left, err := i.evaluate(expr.Left)
 	if err != nil {
@@ -62,6 +76,12 @@ func (i *Interpreter) VisitExprBinary(expr *ast.Binary) (any, error) {
 		equalityOp = func(a, b any) bool {
 			return !i.isEqual(a, b)
 		}
+	case token.COMMA:
+		_, err := i.evaluate(expr.Left)
+		if err != nil {
+			return nil, err
+		}
+		return i.evaluate(expr.Right)
 	}
 
 	if arithmeticOp != nil {
@@ -178,6 +198,13 @@ func (i *Interpreter) checkStringOperands(operator token.Token, left any, right 
 		return "", "", err
 	}
 	return leftVal, rightVal, nil
+}
+func (i *Interpreter) checkBooleanOperand(operator token.Token, operand any) (bool, error) {
+	if val, ok := operand.(bool); !ok {
+		return false, errorFunc(operand, "Operand must be a boolean.", operator.Line)
+	} else {
+		return val, nil
+	}
 }
 func errorFunc(actual interface{}, expectation string, line int) error {
 	//actualStr := ""

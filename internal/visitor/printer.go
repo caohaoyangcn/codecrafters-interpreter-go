@@ -11,6 +11,10 @@ import (
 type AstPrinter struct {
 }
 
+func (a *AstPrinter) VisitExprTernary(expr *ast.Ternary) (any, error) {
+	return a.parenthesize(expr.Question.Lexeme+" "+expr.Colon.Lexeme, expr.Test, expr.Left, expr.Right), nil
+}
+
 func (a *AstPrinter) VisitExprBinary(expr *ast.Binary) (any, error) {
 	return a.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right), nil
 }

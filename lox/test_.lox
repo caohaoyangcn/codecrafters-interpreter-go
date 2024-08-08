@@ -1,0 +1,1 @@
+var result = (a + b) > 7 && "Success" != "Failure" or x >= 5

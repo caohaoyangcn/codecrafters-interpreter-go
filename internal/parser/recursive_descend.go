@@ -31,7 +31,49 @@ func (p *Parser) Parse() ast.Expr {
 }
 
 func (p *Parser) Expression() (ast.Expr, error) {
-	return p.Equality()
+	return p.Comma()
+}
+
+// Comma implements the comma operator in C
+// ref: https://en.wikipedia.org/wiki/Comma_operator
+func (p *Parser) Comma() (ast.Expr, error) {
+	expr, err := p.Ternary()
+	if err != nil {
+		return nil, fmt.Errorf("comma: %w", err)
+	}
+	for p.match(token.COMMA) {
+		operator := p.previous()
+		rightExpr, err := p.Equality()
+		if err != nil {
+			return nil, fmt.Errorf("comma: %w", err)
+		}
+		expr = ast.NewExprBinary(expr, *operator, rightExpr)
+	}
+	return expr, nil
+}
+func (p *Parser) Ternary() (ast.Expr, error) {
+	expr, err := p.Equality()
+	if err != nil {
+		return nil, fmt.Errorf("ternary: %w", err)
+	}
+	for p.match(token.QUESTION_MARK) {
+		q := p.previous()
+		leftExpr, err := p.Equality()
+		if err != nil {
+			return nil, fmt.Errorf("ternary: %w", err)
+		}
+		if _, err := p.consume(token.COLON, "Expect ':' after '?'."); err != nil {
+			return nil, err
+		}
+		c := p.previous()
+		rightExpr, err := p.Equality()
+		if err != nil {
+			return nil, fmt.Errorf("ternary: %w", err)
+		}
+		expr = ast.NewExprTernary(expr, *q, leftExpr, *c, rightExpr)
+	}
+
+	return expr, nil
 }
 func (p *Parser) Equality() (ast.Expr, error) {
 	expr, err := p.Comparison()

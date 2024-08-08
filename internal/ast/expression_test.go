@@ -24,6 +24,7 @@ func TestDefineAst(t *testing.T) {
 					"Grouping : Expr expression",
 					"Literal  : any value",
 					"Unary    : token.Token operator, Expr right",
+					"Ternary  : Expr test, token.Token question, Expr left, token.Token colon, Expr right",
 				},
 			},
 		},

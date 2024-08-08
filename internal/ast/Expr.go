@@ -53,9 +53,26 @@ func (u *Unary) Accept(visitor Visitor[any]) (any, error) {
 	return visitor.VisitExprUnary(u)
 }
 
+type Ternary struct {
+	Test     Expr
+	Question token.Token
+	Left     Expr
+	Colon    token.Token
+	Right    Expr
+}
+
+func NewExprTernary(Test Expr, Question token.Token, Left Expr, Colon token.Token, Right Expr) Expr {
+	return &Ternary{Test: Test, Question: Question, Left: Left, Colon: Colon, Right: Right}
+}
+
+func (t *Ternary) Accept(visitor Visitor[any]) (any, error) {
+	return visitor.VisitExprTernary(t)
+}
+
 type Visitor[T any] interface {
 	VisitExprBinary(expr *Binary) (T, error)
 	VisitExprGrouping(expr *Grouping) (T, error)
 	VisitExprLiteral(expr *Literal) (T, error)
 	VisitExprUnary(expr *Unary) (T, error)
+	VisitExprTernary(expr *Ternary) (T, error)
 }

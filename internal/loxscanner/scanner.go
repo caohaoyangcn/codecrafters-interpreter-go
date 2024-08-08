@@ -127,6 +127,10 @@ func (s *Scanner) scanToken() {
 		s.line++
 	case '"':
 		s.scanString()
+	case '?':
+		s.addToken(token.QUESTION_MARK)
+	case ':':
+		s.addToken(token.COLON)
 	default:
 		if isDigit(next) {
 			s.scanNumber(next)

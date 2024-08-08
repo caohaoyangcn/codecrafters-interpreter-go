@@ -28,6 +28,8 @@ const (
 	SEMICOLON
 	SLASH
 	STAR
+	QUESTION_MARK
+	COLON
 
 	// One or two character tokens.
 	BANG
@@ -134,6 +136,10 @@ func (t Type) String() string {
 		return "SLASH"
 	case STAR:
 		return "STAR"
+	case QUESTION_MARK:
+		return "QUESTION_MARK"
+	case COLON:
+		return "COLON"
 	case BANG:
 		return "BANG"
 	case BANG_EQUAL:
@@ -222,6 +228,10 @@ func (t Type) Repr(obj any) string {
 		return "/"
 	case STAR:
 		return "*"
+	case QUESTION_MARK:
+		return "?"
+	case COLON:
+		return ":"
 	case BANG:
 		return "!"
 	case BANG_EQUAL:
