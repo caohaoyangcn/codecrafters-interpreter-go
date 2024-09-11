@@ -20,14 +20,50 @@ func (p *Parser) Errors() []error {
 	return p.errors
 }
 
-func (p *Parser) Parse() ast.Expr {
+func (p *Parser) Parse() []ast.Stmt {
+	var stmts []ast.Stmt
+	for !p.atEnd() {
+		stmt, err := p.Statement()
+		if err != nil {
+			p.errors = append(p.errors, err)
+			return nil
+		}
+		stmts = append(stmts, stmt)
+	}
+	return stmts
+}
+
+// Statement implements the statement rule
+//
+// statement      → exprStmt
+//
+//	| printStmt ;
+func (p *Parser) Statement() (ast.Stmt, error) {
+	if p.match(token.PRINT) {
+		return p.PrintStatement()
+	}
 	expr, err := p.Expression()
 	if err != nil {
-		// TODO report error
-		p.errors = append(p.errors, err)
-		return nil
+		return nil, fmt.Errorf("statement: %w", err)
 	}
-	return expr
+	if _, err := p.consume(token.SEMICOLON, "Expect ';' after expression."); err != nil {
+		return nil, err
+	}
+	return ast.NewStmtExpression(expr), nil
+}
+
+// PrintStatement implements the print statement rule
+//
+//	printStmt      → "print" expression ";" ;
+func (p *Parser) PrintStatement() (ast.Stmt, error) {
+	value, err := p.Expression()
+	if err != nil {
+		return nil, fmt.Errorf("PrintStatement: %w", err)
+	}
+	if _, err := p.consume(token.SEMICOLON, "Expect ';' after expression."); err != nil {
+		return nil, err
+	}
+	return ast.NewStmtPrint(value), nil
 }
 
 func (p *Parser) Expression() (ast.Expr, error) {

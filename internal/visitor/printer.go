@@ -11,6 +11,14 @@ import (
 type AstPrinter struct {
 }
 
+func (a *AstPrinter) VisitStmtExpression(stmt *ast.Expression) (any, error) {
+	return fmt.Sprintf("%s;", a.PrintExpr(stmt.Expression_)), nil
+}
+
+func (a *AstPrinter) VisitStmtPrint(stmt *ast.Print) (any, error) {
+	return fmt.Sprintf("print %s", a.PrintExpr(stmt.Expression_)), nil
+}
+
 func (a *AstPrinter) VisitExprTernary(expr *ast.Ternary) (any, error) {
 	return a.parenthesize(expr.Question.Lexeme+" "+expr.Colon.Lexeme, expr.Test, expr.Left, expr.Right), nil
 }
@@ -35,10 +43,15 @@ func (a *AstPrinter) VisitExprUnary(expr *ast.Unary) (any, error) {
 }
 
 var (
-	_ ast.Visitor[any] = &AstPrinter{}
+	_ ast.ExprVisitor[any] = &AstPrinter{}
+	_ ast.StmtVisitor[any] = &AstPrinter{}
 )
 
-func (a *AstPrinter) Print(expr ast.Expr) string {
+func (a *AstPrinter) PrintExpr(expr ast.Expr) string {
+	accept, _ := expr.Accept(a)
+	return accept.(string)
+}
+func (a *AstPrinter) PrintStmt(expr ast.Stmt) string {
 	accept, _ := expr.Accept(a)
 	return accept.(string)
 }
@@ -49,7 +62,7 @@ func (a *AstPrinter) parenthesize(name string, exprs ...ast.Expr) string {
 	sb.WriteString(name)
 	for _, expr := range exprs {
 		sb.WriteRune(' ')
-		sb.WriteString(a.Print(expr))
+		sb.WriteString(a.PrintExpr(expr))
 	}
 	sb.WriteRune(')')
 	return sb.String()
@@ -59,9 +72,9 @@ func ParserPrinter(obj any) string {
 	if obj == nil {
 		return "nil"
 	}
-	switch obj.(type) {
+	switch obj := obj.(type) {
 	case float64:
-		val := strconv.FormatFloat(obj.(float64), 'f', -1, 64)
+		val := strconv.FormatFloat(obj, 'f', -1, 64)
 		if strings.Contains(val, ".") {
 			return val
 		}

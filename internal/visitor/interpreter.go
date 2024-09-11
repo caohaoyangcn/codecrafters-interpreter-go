@@ -9,7 +9,23 @@ import (
 )
 
 type Interpreter struct {
-	errors []error
+}
+
+func (i *Interpreter) VisitStmtExpression(stmt *ast.Expression) (any, error) {
+	_, err := i.evaluate(stmt.Expression_)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (i *Interpreter) VisitStmtPrint(stmt *ast.Print) (any, error) {
+	val, err := i.evaluate(stmt.Expression_)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(i.Stringer(val))
+	return nil, nil
 }
 
 func (i *Interpreter) VisitExprTernary(expr *ast.Ternary) (any, error) {
@@ -138,14 +154,23 @@ func (i *Interpreter) VisitExprUnary(expr *ast.Unary) (any, error) {
 }
 
 var (
-	_ ast.Visitor[any] = &Interpreter{}
+	_ ast.ExprVisitor[any] = &Interpreter{}
+	_ ast.StmtVisitor[any] = &Interpreter{}
 )
 
 func (i *Interpreter) evaluate(expr ast.Expr) (any, error) {
 	return expr.Accept(i)
 }
-func (i *Interpreter) Interpret(expr ast.Expr) (any, error) {
-	return i.evaluate(expr)
+func (i *Interpreter) execute(stmt ast.Stmt) (any, error) {
+	return stmt.Accept(i)
+}
+func (i *Interpreter) Interpret(stmts []ast.Stmt) (any, error) {
+	for _, stmt := range stmts {
+		if _, err := i.execute(stmt); err != nil {
+			return nil, err
+		}
+	}
+	return nil, nil
 }
 
 func (i *Interpreter) isTruthy(right any) bool {
@@ -225,11 +250,11 @@ func Stringer(obj any) string {
 	if obj == nil {
 		return "nil"
 	}
-	switch obj.(type) {
+	switch obj := obj.(type) {
 	case string:
-		return fmt.Sprintf("%s", obj)
+		return obj
 	case float64:
-		val := strconv.FormatFloat(obj.(float64), 'f', -1, 64)
+		val := strconv.FormatFloat(obj, 'f', -1, 64)
 		return val
 	case bool:
 		return fmt.Sprintf("%t", obj)

@@ -19,5 +19,5 @@ func main() {
 			Value: 1,
 		},
 	}
-	fmt.Println(v.Print(expr))
+	fmt.Println(v.PrintExpr(expr))
 }

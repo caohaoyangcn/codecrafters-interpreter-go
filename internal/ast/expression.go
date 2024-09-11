@@ -29,10 +29,10 @@ func DefineAst(outDir string, base string, types []string) {
 `)
 
 	sb.WriteString(fmt.Sprintf(`type %s interface{
-	Accept(visitor Visitor[any]) (any, error)
+	Accept(visitor %sVisitor[any]) (any, error)
 }
 
-`, base))
+`, base, base))
 
 	for _, t := range types {
 		typeName := strings.Split(t, ":")[0]
@@ -63,12 +63,12 @@ func DefineAst(outDir string, base string, types []string) {
 		sb.WriteString(constructorFunc.String())
 
 		// visitor pattern
-		sb.WriteString(fmt.Sprintf(`func (%s *%s) Accept(visitor Visitor[any]) (any, error) {
+		sb.WriteString(fmt.Sprintf(`func (%s *%s) Accept(visitor %sVisitor[any]) (any, error) {
 	return visitor.Visit%s%s(%s)
 }
 
 `,
-			strings.ToLower(string(typeName[0])), typeName, base, typeName, strings.ToLower(string(typeName[0]))))
+			strings.ToLower(string(typeName[0])), typeName, base, base, typeName, strings.ToLower(string(typeName[0]))))
 	}
 
 	DefineVisitor(sb, base, types)
@@ -77,16 +77,16 @@ func DefineAst(outDir string, base string, types []string) {
 	if err != nil {
 		panic(err)
 	}
-	fd.Write(formatted)
+	_, _ = fd.Write(formatted)
 
 }
 
 func DefineVisitor(outDir io.StringWriter, base string, types []string) {
-	outDir.WriteString("type Visitor[T any] interface { \n\n")
+	_, _ = outDir.WriteString(fmt.Sprintf("type %sVisitor[T any] interface { \n\n", base))
 	for _, s := range types {
 		typeName := strings.Split(s, ":")[0]
-		outDir.WriteString(fmt.Sprintf("\tVisit%s%s(%s *%s) (T, error)\n",
+		_, _ = outDir.WriteString(fmt.Sprintf("\tVisit%s%s(%s *%s) (T, error)\n",
 			base, typeName, strings.ToLower(base), typeName))
 	}
-	outDir.WriteString("}\n\n")
+	_, _ = outDir.WriteString("}\n\n")
 }

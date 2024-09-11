@@ -43,14 +43,16 @@ func main() {
 			}
 			os.Exit(exitCodeScanError)
 		}
-		if expr, errs := handleParse(tokens); errs != nil {
+		if stmts, errs := handleParse(tokens); errs != nil {
 			for _, err := range errs {
 				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			}
 			os.Exit(exitCodeParseError)
 		} else {
 			v := &visitor.AstPrinter{}
-			fmt.Println(v.Print(expr))
+			for _, stmt := range stmts {
+				fmt.Println(v.PrintStmt(stmt))
+			}
 		}
 		os.Exit(exitCodeSuccess)
 	}
@@ -77,13 +79,13 @@ func main() {
 	os.Exit(1)
 }
 
-func handleParse(tokens []*token.Token) (ast.Expr, []error) {
+func handleParse(tokens []*token.Token) ([]ast.Stmt, []error) {
 	p := parser.NewParser(tokens)
-	expr := p.Parse()
+	stmts := p.Parse()
 	if p.Errors() != nil {
 		return nil, p.Errors()
 	}
-	return expr, nil
+	return stmts, nil
 }
 
 const (
@@ -106,12 +108,11 @@ func handleTokenize() ([]*token.Token, []error) {
 	return tokens, sc.Errors()
 }
 
-func handleInterpret(expr ast.Expr) {
+func handleInterpret(expr []ast.Stmt) {
 	i := &visitor.Interpreter{}
-	val, err := i.Interpret(expr)
+	_, err := i.Interpret(expr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		os.Exit(interpreterError)
 	}
-	fmt.Println(i.Stringer(val))
 }

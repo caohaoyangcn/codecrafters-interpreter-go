@@ -15,6 +15,17 @@ func TestDefineAst(t *testing.T) {
 		args args
 	}{
 		{
+			name: "statement",
+			args: args{
+				outDir: ".",
+				base:   "Stmt",
+				types: []string{
+					"Expression : Expr expression_",
+					"Print      : Expr expression_",
+				},
+			},
+		},
+		{
 			name: "ok",
 			args: args{
 				outDir: ".",

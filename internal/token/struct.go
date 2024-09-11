@@ -36,9 +36,9 @@ func (t Token) String() string {
 		objStr = "null"
 		return fmt.Sprintf("%s %v %v", t.Type, t.Lexeme, objStr)
 	}
-	switch object.(type) {
+	switch object := object.(type) {
 	case float64:
-		val := strconv.FormatFloat(object.(float64), 'f', -1, 64)
+		val := strconv.FormatFloat(object, 'f', -1, 64)
 		if strings.Contains(val, ".") {
 			objStr = val
 		} else {

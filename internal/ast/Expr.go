@@ -3,7 +3,7 @@ package ast
 import "github.com/codecrafters-io/interpreter-starter-go/internal/token"
 
 type Expr interface {
-	Accept(visitor Visitor[any]) (any, error)
+	Accept(visitor ExprVisitor[any]) (any, error)
 }
 
 type Binary struct {
@@ -16,7 +16,7 @@ func NewExprBinary(Left Expr, Operator token.Token, Right Expr) Expr {
 	return &Binary{Left: Left, Operator: Operator, Right: Right}
 }
 
-func (b *Binary) Accept(visitor Visitor[any]) (any, error) {
+func (b *Binary) Accept(visitor ExprVisitor[any]) (any, error) {
 	return visitor.VisitExprBinary(b)
 }
 
@@ -26,7 +26,7 @@ type Grouping struct {
 
 func NewExprGrouping(Expression Expr) Expr { return &Grouping{Expression: Expression} }
 
-func (g *Grouping) Accept(visitor Visitor[any]) (any, error) {
+func (g *Grouping) Accept(visitor ExprVisitor[any]) (any, error) {
 	return visitor.VisitExprGrouping(g)
 }
 
@@ -36,7 +36,7 @@ type Literal struct {
 
 func NewExprLiteral(Value any) Expr { return &Literal{Value: Value} }
 
-func (l *Literal) Accept(visitor Visitor[any]) (any, error) {
+func (l *Literal) Accept(visitor ExprVisitor[any]) (any, error) {
 	return visitor.VisitExprLiteral(l)
 }
 
@@ -49,7 +49,7 @@ func NewExprUnary(Operator token.Token, Right Expr) Expr {
 	return &Unary{Operator: Operator, Right: Right}
 }
 
-func (u *Unary) Accept(visitor Visitor[any]) (any, error) {
+func (u *Unary) Accept(visitor ExprVisitor[any]) (any, error) {
 	return visitor.VisitExprUnary(u)
 }
 
@@ -65,11 +65,11 @@ func NewExprTernary(Test Expr, Question token.Token, Left Expr, Colon token.Toke
 	return &Ternary{Test: Test, Question: Question, Left: Left, Colon: Colon, Right: Right}
 }
 
-func (t *Ternary) Accept(visitor Visitor[any]) (any, error) {
+func (t *Ternary) Accept(visitor ExprVisitor[any]) (any, error) {
 	return visitor.VisitExprTernary(t)
 }
 
-type Visitor[T any] interface {
+type ExprVisitor[T any] interface {
 	VisitExprBinary(expr *Binary) (T, error)
 	VisitExprGrouping(expr *Grouping) (T, error)
 	VisitExprLiteral(expr *Literal) (T, error)
