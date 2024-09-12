@@ -53,6 +53,27 @@ func (u *Unary) Accept(visitor ExprVisitor[any]) (any, error) {
 	return visitor.VisitExprUnary(u)
 }
 
+type Variable struct {
+	Name token.Token
+}
+
+func NewExprVariable(Name token.Token) Expr { return &Variable{Name: Name} }
+
+func (v *Variable) Accept(visitor ExprVisitor[any]) (any, error) {
+	return visitor.VisitExprVariable(v)
+}
+
+type Assign struct {
+	Name  token.Token
+	Value Expr
+}
+
+func NewExprAssign(Name token.Token, Value Expr) Expr { return &Assign{Name: Name, Value: Value} }
+
+func (a *Assign) Accept(visitor ExprVisitor[any]) (any, error) {
+	return visitor.VisitExprAssign(a)
+}
+
 type Ternary struct {
 	Test     Expr
 	Question token.Token
@@ -74,5 +95,7 @@ type ExprVisitor[T any] interface {
 	VisitExprGrouping(expr *Grouping) (T, error)
 	VisitExprLiteral(expr *Literal) (T, error)
 	VisitExprUnary(expr *Unary) (T, error)
+	VisitExprVariable(expr *Variable) (T, error)
+	VisitExprAssign(expr *Assign) (T, error)
 	VisitExprTernary(expr *Ternary) (T, error)
 }

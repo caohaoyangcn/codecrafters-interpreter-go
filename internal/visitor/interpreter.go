@@ -5,13 +5,73 @@ import (
 	"strconv"
 
 	"github.com/codecrafters-io/interpreter-starter-go/internal/ast"
+	"github.com/codecrafters-io/interpreter-starter-go/internal/runtime"
 	"github.com/codecrafters-io/interpreter-starter-go/internal/token"
 )
 
 type Interpreter struct {
+	env *runtime.Environment
+}
+
+func NewInterpreter() *Interpreter {
+	return &Interpreter{
+		env: runtime.NewEnvironment(nil),
+	}
+}
+
+func (i *Interpreter) VisitStmtBlock(stmt *ast.Block) (any, error) {
+	prev := i.env
+	i.env = runtime.NewEnvironment(prev)
+	defer func() {
+		i.env = prev
+	}()
+	for _, statement := range stmt.Statements {
+		if _, err := i.execute(statement); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
+}
+
+func (i *Interpreter) VisitExprAssign(expr *ast.Assign) (any, error) {
+	val, err := i.evaluate(expr.Value)
+	if err != nil {
+		return nil, err
+	}
+	err = i.env.Assign(expr.Name, val)
+	if err != nil {
+		return nil, err
+	}
+	return val, nil
+}
+
+func (i *Interpreter) VisitStmtVar(stmt *ast.Var) (any, error) {
+	var (
+		value any
+		err   error
+	)
+	if stmt.Initializer != nil {
+		value, err = i.evaluate(stmt.Initializer)
+		if err != nil {
+			return nil, err
+		}
+	}
+	i.env.Define(stmt.Name.Lexeme, value)
+	return nil, nil
+}
+
+func (i *Interpreter) VisitExprVariable(expr *ast.Variable) (any, error) {
+	return i.env.Get(expr.Name)
 }
 
 func (i *Interpreter) VisitStmtExpression(stmt *ast.Expression) (any, error) {
+	if !stmt.HasSemicolon {
+		_, err := i.execute(ast.NewStmtPrint(stmt.Expression_))
+		if err != nil {
+			return nil, err
+		}
+	}
 	_, err := i.evaluate(stmt.Expression_)
 	if err != nil {
 		return nil, err

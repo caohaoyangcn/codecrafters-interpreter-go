@@ -56,7 +56,7 @@ func main() {
 		}
 		os.Exit(exitCodeSuccess)
 	}
-	if command == "evaluate" {
+	if command == "evaluate" || command == "run" {
 		tokens, errs := handleTokenize()
 		if errs != nil {
 			for _, err := range errs {
@@ -109,7 +109,7 @@ func handleTokenize() ([]*token.Token, []error) {
 }
 
 func handleInterpret(expr []ast.Stmt) {
-	i := &visitor.Interpreter{}
+	i := visitor.NewInterpreter()
 	_, err := i.Interpret(expr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err.Error())

@@ -11,8 +11,31 @@ import (
 type AstPrinter struct {
 }
 
+func (a *AstPrinter) VisitStmtBlock(stmt *ast.Block) (any, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AstPrinter) VisitStmtVar(stmt *ast.Var) (any, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AstPrinter) VisitExprVariable(expr *ast.Variable) (any, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AstPrinter) VisitExprAssign(expr *ast.Assign) (any, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (a *AstPrinter) VisitStmtExpression(stmt *ast.Expression) (any, error) {
-	return fmt.Sprintf("%s;", a.PrintExpr(stmt.Expression_)), nil
+	if stmt.HasSemicolon {
+		return fmt.Sprintf("%s;", a.PrintExpr(stmt.Expression_)), nil
+	}
+	return fmt.Sprintf("%s", a.PrintExpr(stmt.Expression_)), nil
 }
 
 func (a *AstPrinter) VisitStmtPrint(stmt *ast.Print) (any, error) {

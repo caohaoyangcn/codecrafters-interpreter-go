@@ -7,15 +7,28 @@ import (
 	"github.com/codecrafters-io/interpreter-starter-go/internal/token"
 )
 
+type ParseMode int
+
+const (
+	// Default mode
+	Default ParseMode = iota
+	REPL
+)
+
 type Parser struct {
 	tokens []*token.Token
 	curr   int
 	errors []error
+	//mode   ParseMode
 }
 
 func NewParser(tokens []*token.Token) *Parser {
 	return &Parser{tokens: tokens}
 }
+
+//	func (p *Parser) SetMode(mode ParseMode) {
+//		p.mode = mode
+//	}
 func (p *Parser) Errors() []error {
 	return p.errors
 }
@@ -23,7 +36,7 @@ func (p *Parser) Errors() []error {
 func (p *Parser) Parse() []ast.Stmt {
 	var stmts []ast.Stmt
 	for !p.atEnd() {
-		stmt, err := p.Statement()
+		stmt, err := p.Declaration()
 		if err != nil {
 			p.errors = append(p.errors, err)
 			return nil
@@ -37,19 +50,76 @@ func (p *Parser) Parse() []ast.Stmt {
 //
 // statement      → exprStmt
 //
-//	| printStmt ;
+//		| printStmt
+//	    | block ;
 func (p *Parser) Statement() (ast.Stmt, error) {
 	if p.match(token.PRINT) {
 		return p.PrintStatement()
+	}
+	if p.match(token.LEFT_BRACE) {
+		return p.block()
 	}
 	expr, err := p.Expression()
 	if err != nil {
 		return nil, fmt.Errorf("statement: %w", err)
 	}
+	//p.consume(token.SEMICOLON, "Expect ';' after expression.")
 	if _, err := p.consume(token.SEMICOLON, "Expect ';' after expression."); err != nil {
+		return ast.NewStmtExpression(expr, false), nil
+	}
+	return ast.NewStmtExpression(expr, true), nil
+}
+
+func (p *Parser) block() (ast.Stmt, error) {
+	var enclosingStatements []ast.Stmt
+	for !p.check(token.RIGHT_BRACE) && !p.atEnd() {
+		d, err := p.Declaration()
+		if err != nil {
+			p.errors = append(p.errors, err)
+			continue
+		}
+		enclosingStatements = append(enclosingStatements, d)
+	}
+	_, err := p.consume(token.RIGHT_BRACE, "Expect '}' after block.")
+	if err != nil {
 		return nil, err
 	}
-	return ast.NewStmtExpression(expr), nil
+	return ast.NewStmtBlock(enclosingStatements), nil
+}
+
+func (p *Parser) varDeclaration() (ast.Stmt, error) {
+	tok, err := p.consume(token.IDENTIFIER, "Expect variable name.")
+	if err != nil {
+		return nil, err
+	}
+	var expr ast.Expr
+	if p.match(token.EQUAL) {
+		expr, err = p.Expression()
+		if err != nil {
+			return nil, fmt.Errorf("varDeclaration: %w", err)
+		}
+		if _, err := p.consume(token.SEMICOLON, "Expect ';' after value."); err != nil {
+			return nil, err
+		}
+	}
+	return ast.NewStmtVar(*tok, expr), nil
+}
+
+// Declaration implements the declaration rule
+// declaration    → varDecl
+//
+//	| statement ;
+func (p *Parser) Declaration() (ast.Stmt, error) {
+	if p.match(token.VAR) {
+		if stmt, err := p.varDeclaration(); err != nil {
+			p.synchronize()
+			p.errors = append(p.errors, err)
+			return nil, nil
+		} else {
+			return stmt, nil
+		}
+	}
+	return p.Statement()
 }
 
 // PrintStatement implements the print statement rule
@@ -67,7 +137,28 @@ func (p *Parser) PrintStatement() (ast.Stmt, error) {
 }
 
 func (p *Parser) Expression() (ast.Expr, error) {
-	return p.Comma()
+	return p.Assignment()
+}
+
+func (p *Parser) Assignment() (ast.Expr, error) {
+	expr, err := p.Comma()
+	if err != nil {
+		return nil, fmt.Errorf("assignment: %w", err)
+	}
+	if p.match(token.EQUAL) {
+		tok := p.previous()
+		right, err := p.Assignment()
+		if err != nil {
+			return nil, fmt.Errorf("assignment: %w", err)
+		}
+		if val, ok := expr.(*ast.Variable); ok {
+			tok := val.Name
+			return ast.NewExprAssign(tok, right), nil
+		}
+		// TODO throw error or just record it?
+		p.errors = append(p.errors, errorFunc(*tok, "Invalid assignment target."))
+	}
+	return expr, nil
 }
 
 // Comma implements the comma operator in C
@@ -82,7 +173,7 @@ func (p *Parser) Comma() (ast.Expr, error) {
 	}
 	for p.match(token.COMMA) {
 		operator := p.previous()
-		rightExpr, err := p.Equality()
+		rightExpr, err := p.Ternary() // TODO
 		if err != nil {
 			return nil, fmt.Errorf("comma: %w", err)
 		}
@@ -209,6 +300,9 @@ func (p *Parser) Primary() (ast.Expr, error) {
 	}
 	if p.match(token.NIL, token.NUMBER, token.STRING) {
 		return ast.NewExprLiteral(p.previous().Object), nil
+	}
+	if p.match(token.IDENTIFIER) {
+		return ast.NewExprVariable(*p.previous()), nil
 	}
 	if p.match(token.LEFT_PAREN) {
 		expr, err := p.Expression()
