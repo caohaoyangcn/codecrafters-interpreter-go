@@ -98,9 +98,9 @@ func (p *Parser) varDeclaration() (ast.Stmt, error) {
 		if err != nil {
 			return nil, fmt.Errorf("varDeclaration: %w", err)
 		}
-		if _, err := p.consume(token.SEMICOLON, "Expect ';' after value."); err != nil {
-			return nil, err
-		}
+	}
+	if _, err := p.consume(token.SEMICOLON, "Expect ';' at the end of var declaration."); err != nil {
+		return nil, err
 	}
 	return ast.NewStmtVar(*tok, expr), nil
 }
